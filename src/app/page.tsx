@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import LastGeneratedMenu from '../components/LastGeneratedMenu'
 
 export default function HomePage() {
   return (
@@ -42,6 +43,14 @@ export default function HomePage() {
             Gérer
           </Link>
         </div>
+      </div>
+
+      {/* Last Generated Menu Section */}
+      <div className="mt-16">
+        <LastGeneratedMenu 
+          title="Votre Dernier Menu" 
+          showClearButton={false}
+        />
       </div>
     </div>
   )

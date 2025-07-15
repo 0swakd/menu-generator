@@ -1,15 +1,26 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { FormData } from '../types'
+import { getFormDefaults, saveFormPreferences } from '../lib/utils'
 
 interface MenuFormProps {
   onSubmit: (data: FormData) => Promise<void>
 }
 
 export default function MenuForm({ onSubmit }: MenuFormProps) {
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<FormData>()
+  const [formDefaults, setFormDefaults] = useState<Partial<FormData>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [newDishes, setNewDishes] = useState(0)
+  
+  const { register, handleSubmit, formState: { errors }, watch, reset } = useForm<FormData>()
+  
+  // Load defaults on component mount
+  useEffect(() => {
+    const defaults = getFormDefaults()
+    setFormDefaults(defaults)
+    setNewDishes(defaults.newDishes || 0)
+    reset(defaults)
+  }, [])
   
   const meals = watch('meals') || 4
   const maxNewDishes = meals * 3 // Assuming max 3 dishes per meal (entrée, plat, dessert)
@@ -17,13 +28,20 @@ export default function MenuForm({ onSubmit }: MenuFormProps) {
   const submitForm = async (data: FormData) => {
     setIsLoading(true)
     const formDataWithNewDishes = { ...data, newDishes }
+    
+    // Save preferences to localStorage (excluding season since it's auto-updated)
+    saveFormPreferences(formDataWithNewDishes)
+    
     await onSubmit(formDataWithNewDishes)
     setIsLoading(false)
   }
 
   return (
     <form onSubmit={handleSubmit(submitForm)} className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-    <h2 className="text-2xl font-bold mb-6">Générateur de Menu</h2>
+    <h2 className="text-2xl font-bold mb-4">Générateur de Menu</h2>
+    <p className="text-sm text-gray-600 mb-6">
+      💾 Vos préférences sont sauvegardées automatiquement
+    </p>
       
       <div className="mb-4">
         <label className="block text-sm font-medium mb-2">Nombre de personnes</label>
@@ -33,13 +51,12 @@ export default function MenuForm({ onSubmit }: MenuFormProps) {
           max="20"
           {...register('people', { required: true, min: 1 })}
           className="w-full px-3 py-2 border border-gray-300 rounded-md"
-          defaultValue="2"
         />
       </div>
 
       <div className="mb-4">
         <label className="block text-sm font-medium mb-2">Budget par personne</label>
-        <select {...register('budget')} className="w-full px-3 py-2 border border-gray-300 rounded-md" defaultValue="€">
+        <select {...register('budget')} className="w-full px-3 py-2 border border-gray-300 rounded-md">
           <option value="€">Économique (€)</option>
           <option value="€€">Moyen (€€)</option>
           <option value="€€€">Élevé (€€€)</option>
@@ -47,8 +64,14 @@ export default function MenuForm({ onSubmit }: MenuFormProps) {
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-2">Saison</label>
-        <select {...register('season')} className="w-full px-3 py-2 border border-gray-300 rounded-md" defaultValue="printemps">
+        <label className="block text-sm font-medium mb-2">
+          Saison {formDefaults.season && (
+            <span className="text-sm text-blue-600 font-normal">
+              (automatiquement détectée: {formDefaults.season})
+            </span>
+          )}
+        </label>
+        <select {...register('season')} className="w-full px-3 py-2 border border-gray-300 rounded-md">
           <option value="printemps">Printemps</option>
           <option value="été">Été</option>
           <option value="automne">Automne</option>
@@ -78,7 +101,6 @@ export default function MenuForm({ onSubmit }: MenuFormProps) {
           max="7"
           {...register('meals', { required: true, min: 1 })}
           className="w-full px-3 py-2 border border-gray-300 rounded-md"
-          defaultValue="4"
         />
       </div>
 

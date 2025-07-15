@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Dish } from '../../types'
 import AddDishForm from '../../components/AddDishForm'
+import LastGeneratedMenu from '../../components/LastGeneratedMenu'
 
 interface DishFilters {
   category: string
@@ -378,6 +379,11 @@ export default function ManageDishesPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Last Generated Menu Section */}
+      <div className="mt-12">
+        <LastGeneratedMenu />
       </div>
     </div>
   )
