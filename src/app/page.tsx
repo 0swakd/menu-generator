@@ -23,7 +23,7 @@ export default function Home() {
       {menu && (
         <div className="mt-8 max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold mb-4">Votre Menu</h2>
-          <pre className="bg-gray-100 p-4 rounded-md overflow-auto">
+          <pre className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-4 rounded-md overflow-auto">
             {JSON.stringify(menu, null, 2)}
           </pre>
         </div>
