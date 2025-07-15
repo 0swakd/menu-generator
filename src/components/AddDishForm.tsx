@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { Dish } from '../types'
 
 interface AddDishFormProps {
+  editingDish?: Dish | null
   onDishAdded: () => void
   onCancel: () => void
 }
@@ -22,12 +23,25 @@ interface DishFormData {
   description: string
 }
 
-export default function AddDishForm({ onDishAdded, onCancel }: AddDishFormProps) {
+export default function AddDishForm({ editingDish, onDishAdded, onCancel }: AddDishFormProps) {
   const [loading, setLoading] = useState(false)
   const [autoFillLoading, setAutoFillLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
-  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<DishFormData>()
+  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<DishFormData>({
+    defaultValues: editingDish ? {
+      name: editingDish.name,
+      category: editingDish.category,
+      cuisine_type: editingDish.cuisine_type,
+      difficulty: editingDish.difficulty,
+      prep_time: editingDish.prep_time,
+      is_vegetarian: editingDish.is_vegetarian,
+      is_vegan: editingDish.is_vegan,
+      price_range: editingDish.price_range,
+      season: editingDish.season,
+      description: editingDish.description
+    } : {}
+  })
   const dishName = watch('name')
 
   const onSubmit = async (data: DishFormData) => {
@@ -35,19 +49,32 @@ export default function AddDishForm({ onDishAdded, onCancel }: AddDishFormProps)
     setError(null)
     
     try {
-      const { error } = await supabase
-        .from('dishes')
-        .insert([data])
-      
-      if (error) {
-        throw error
+      if (editingDish) {
+        // Update existing dish
+        const { error } = await supabase
+          .from('dishes')
+          .update(data)
+          .eq('id', editingDish.id)
+        
+        if (error) {
+          throw error
+        }
+      } else {
+        // Create new dish
+        const { error } = await supabase
+          .from('dishes')
+          .insert([data])
+        
+        if (error) {
+          throw error
+        }
       }
       
       reset()
       onDishAdded()
     } catch (err) {
-      setError('Erreur lors de l\'ajout du plat')
-      console.error('Error adding dish:', err)
+      setError(editingDish ? 'Erreur lors de la modification du plat' : 'Erreur lors de l\'ajout du plat')
+      console.error('Error saving dish:', err)
     } finally {
       setLoading(false)
     }
@@ -99,7 +126,7 @@ export default function AddDishForm({ onDishAdded, onCancel }: AddDishFormProps)
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-gray-100">
-        Ajouter un nouveau plat
+        {editingDish ? 'Modifier le plat' : 'Ajouter un nouveau plat'}
       </h2>
       
       {error && (
@@ -121,14 +148,16 @@ export default function AddDishForm({ onDishAdded, onCancel }: AddDishFormProps)
                 className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100"
                 placeholder="Ex: Risotto aux champignons"
               />
-              <button
-                type="button"
-                onClick={handleAutoFill}
-                disabled={autoFillLoading || !dishName?.trim()}
-                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
-              >
-                {autoFillLoading ? 'Auto-remplissage...' : 'Auto-remplir'}
-              </button>
+              {!editingDish && (
+                <button
+                  type="button"
+                  onClick={handleAutoFill}
+                  disabled={autoFillLoading || !dishName?.trim()}
+                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                >
+                  {autoFillLoading ? 'Auto-remplissage...' : 'Auto-remplir'}
+                </button>
+              )}
             </div>
             {errors.name && (
               <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
@@ -290,7 +319,10 @@ export default function AddDishForm({ onDishAdded, onCancel }: AddDishFormProps)
             disabled={loading}
             className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? 'Ajout en cours...' : 'Ajouter le plat'}
+            {loading ? 
+              (editingDish ? 'Modification en cours...' : 'Ajout en cours...') : 
+              (editingDish ? 'Modifier le plat' : 'Ajouter le plat')
+            }
           </button>
           <button
             type="button"
