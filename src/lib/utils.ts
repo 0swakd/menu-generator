@@ -59,7 +59,6 @@ export function getFormDefaults(): Partial<FormData> {
     meals: saved?.meals || 4,
     newDishes: saved?.newDishes || 0,
     ...saved,
-    season: currentSeason // Override saved season with current season
   }
 }
 
