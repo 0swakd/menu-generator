@@ -15,11 +15,6 @@ export async function POST(request: NextRequest) {
     let query = supabase
       .from('dishes')
       .select('*')
-      .eq('price_range', budget)
-      .eq('season', season)
-
-    if (vegetarian) query = query.eq('is_vegetarian', true)
-    if (vegan) query = query.eq('is_vegan', true)
 
     const { data: dishes, error } = await query
 
