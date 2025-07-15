@@ -34,7 +34,7 @@ Génère un menu pour ${people} personnes sur ${meals} repas avec les contrainte
 - Végétarien : ${vegetarian ? 'Oui' : 'Non'}
 - Végan : ${vegan ? 'Oui' : 'Non'}
 
-Plats disponibles en base : ${JSON.stringify(dishes)}
+Plats disponibles en base, tu dois essayer au maximul de les intégrer à la liste des plats : ${JSON.stringify(dishes)}
 
 Crée un menu équilibré et varié avec des suggestions d'accompagnements et d'ingrédients.
 Format la réponse en JSON avec cette structure :
