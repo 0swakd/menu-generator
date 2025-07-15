@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MenuResponse } from '../types'
 
 interface MenuDisplayProps {
@@ -9,6 +9,39 @@ interface MenuDisplayProps {
 
 export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
   const [isPrintMode, setIsPrintMode] = useState(false)
+  const [dishStatus, setDishStatus] = useState<{[key: string]: boolean}>({})
+  const [addingDish, setAddingDish] = useState<string | null>(null)
+  const [addSuccessMessage, setAddSuccessMessage] = useState<string | null>(null)
+
+  // Check which dishes exist in the database
+  useEffect(() => {
+    const checkDishes = async () => {
+      const allDishes = menu.menu.flatMap(meal => meal.dishes)
+      const uniqueDishes = [...new Set(allDishes)]
+      
+      try {
+        const response = await fetch('/api/check-dishes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dishNames: uniqueDishes })
+        })
+        
+        const result = await response.json()
+        
+        if (result.dishes) {
+          const statusMap: {[key: string]: boolean} = {}
+          result.dishes.forEach((dish: {name: string, exists: boolean}) => {
+            statusMap[dish.name] = dish.exists
+          })
+          setDishStatus(statusMap)
+        }
+      } catch (error) {
+        console.error('Error checking dishes:', error)
+      }
+    }
+    
+    checkDishes()
+  }, [menu])
 
   const handlePrint = () => {
     setIsPrintMode(true)
@@ -16,6 +49,31 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
       window.print()
       setIsPrintMode(false)
     }, 100)
+  }
+
+  const handleAddDish = async (dishName: string) => {
+    setAddingDish(dishName)
+    
+    try {
+      const response = await fetch('/api/quick-add-dish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dishName })
+      })
+      
+      if (response.ok) {
+        // Update the dish status to show it now exists
+        setDishStatus(prev => ({ ...prev, [dishName]: true }))
+        setAddSuccessMessage(`"${dishName}" a été ajouté à la base de données!`)
+        setTimeout(() => setAddSuccessMessage(null), 3000)
+      } else {
+        console.error('Failed to add dish')
+      }
+    } catch (error) {
+      console.error('Error adding dish:', error)
+    } finally {
+      setAddingDish(null)
+    }
   }
 
   const formatDate = () => {
@@ -41,6 +99,26 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
           Imprimer
         </button>
       </div>
+
+      {/* Success Message */}
+      {addSuccessMessage && (
+        <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-md no-print">
+          {addSuccessMessage}
+        </div>
+      )}
+
+      {/* Dish Status Summary */}
+      {Object.keys(dishStatus).length > 0 && (
+        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg no-print">
+          <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+            📊 Statut des plats
+          </h3>
+          <div className="text-sm text-blue-700 dark:text-blue-300">
+            {Object.values(dishStatus).filter(exists => exists).length} plats dans la base de données, {' '}
+            {Object.values(dishStatus).filter(exists => !exists).length} nouveaux plats
+          </div>
+        </div>
+      )}
 
       <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 ${isPrintMode ? 'print-mode' : ''}`}>
         {/* Header Section */}
@@ -75,11 +153,27 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
                 <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
                   🍽️ Plats
                 </h4>
-                <ul className="space-y-1">
+                <ul className="space-y-2">
                   {meal.dishes.map((dish, dishIndex) => (
-                    <li key={dishIndex} className="text-gray-700 dark:text-gray-300 flex items-center">
-                      <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                      {dish}
+                    <li key={dishIndex} className="text-gray-700 dark:text-gray-300 flex items-center justify-between">
+                      <div className="flex items-center">
+                        <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                        <span>{dish}</span>
+                        {dishStatus[dish] === true && (
+                          <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                            Dans la base
+                          </span>
+                        )}
+                      </div>
+                      {dishStatus[dish] === false && (
+                        <button
+                          onClick={() => handleAddDish(dish)}
+                          disabled={addingDish === dish}
+                          className="ml-3 px-3 py-1 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors no-print"
+                        >
+                          {addingDish === dish ? 'Ajout...' : 'Ajouter à la base'}
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ul>
