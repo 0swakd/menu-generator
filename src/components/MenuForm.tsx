@@ -7,12 +7,17 @@ interface MenuFormProps {
 }
 
 export default function MenuForm({ onSubmit }: MenuFormProps) {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>()
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<FormData>()
   const [isLoading, setIsLoading] = useState(false)
+  const [newDishes, setNewDishes] = useState(0)
+  
+  const meals = watch('meals') || 4
+  const maxNewDishes = meals * 3 // Assuming max 3 dishes per meal (entrée, plat, dessert)
 
   const submitForm = async (data: FormData) => {
     setIsLoading(true)
-    await onSubmit(data)
+    const formDataWithNewDishes = { ...data, newDishes }
+    await onSubmit(formDataWithNewDishes)
     setIsLoading(false)
   }
 
@@ -65,7 +70,7 @@ export default function MenuForm({ onSubmit }: MenuFormProps) {
         </div>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-4">
         <label className="block text-sm font-medium mb-2">Nombre de repas</label>
         <input
           type="number"
@@ -75,6 +80,29 @@ export default function MenuForm({ onSubmit }: MenuFormProps) {
           className="w-full px-3 py-2 border border-gray-300 rounded-md"
           defaultValue="4"
         />
+      </div>
+
+      <div className="mb-6">
+        <label className="block text-sm font-medium mb-2">
+          Nouveaux plats à créer: {newDishes}/{maxNewDishes}
+        </label>
+        <div className="space-y-2">
+          <input
+            type="range"
+            min="0"
+            max={maxNewDishes}
+            value={newDishes}
+            onChange={(e) => setNewDishes(parseInt(e.target.value))}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+          />
+          <div className="text-xs text-gray-600 flex justify-between">
+            <span>0 (utiliser uniquement la base)</span>
+            <span>{maxNewDishes} (tous nouveaux)</span>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Nombre de nouveaux plats que Claude peut créer au lieu d'utiliser ceux de la base de données
+          </p>
+        </div>
       </div>
 
       <button

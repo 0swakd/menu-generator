@@ -9,7 +9,7 @@ const anthropic = new Anthropic({
 
 export async function POST(request: NextRequest) {
   const body: FormData = await request.json()
-  const { people, budget, season, vegetarian, vegan, meals } = body
+  const { people, budget, season, vegetarian, vegan, meals, newDishes } = body
 
   try {
     let query = supabase
@@ -29,7 +29,13 @@ Génère un menu pour ${people} personnes sur ${meals} repas avec les contrainte
 - Végétarien : ${vegetarian ? 'Oui' : 'Non'}
 - Végan : ${vegan ? 'Oui' : 'Non'}
 
-Plats disponibles en base, tu dois essayer au maximul de les intégrer à la liste des plats : ${JSON.stringify(dishes)}
+Plats disponibles en base de données : ${JSON.stringify(dishes)}
+
+IMPORTANT - Règle pour les nouveaux plats :
+- Tu dois créer exactement ${newDishes} nouveaux plats qui ne sont PAS dans la base de données
+- Ces nouveaux plats doivent respecter les contraintes (budget, saison, végétarien/végan)
+- Pour les autres plats, utilise prioritairement ceux de la base de données
+- Les nouveaux plats peuvent être inspirés des plats existants mais doivent être différents
 
 Crée un menu équilibré et varié avec des suggestions d'accompagnements et d'ingrédients.
 Format la réponse en JSON avec cette structure :
