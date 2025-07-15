@@ -1,33 +1,48 @@
-'use client'
-import { useState } from 'react'
-import MenuForm from '../components/MenuForm'
-import { FormData, MenuResponse } from '../types'
+import Link from 'next/link'
 
-export default function Home() {
-  const [menu, setMenu] = useState<MenuResponse | null>(null)
-
-  const handleSubmit = async (formData: FormData) => {
-    const response = await fetch('/api/generate-menu', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    })
-    
-    const result: MenuResponse = await response.json()
-    setMenu(result)
-  }
-
+export default function HomePage() {
   return (
-    <div className="container mx-auto py-8">
-      <MenuForm onSubmit={handleSubmit} />
-      {menu && (
-        <div className="mt-8 max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold mb-4">Votre Menu</h2>
-          <pre className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-4 rounded-md overflow-auto">
-            {JSON.stringify(menu, null, 2)}
-          </pre>
+    <div className="container mx-auto py-16 text-center">
+      <h1 className="text-4xl font-bold mb-8 text-gray-900 dark:text-gray-100">
+        Générateur de Menus Intelligent
+      </h1>
+      
+      <p className="text-lg text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
+        Créez des menus personnalisés en quelques clics grâce à l'intelligence artificielle. 
+        Gérez vos plats et générez des suggestions adaptées à vos contraintes.
+      </p>
+
+      <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+            Créer un Menu
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Générez un menu personnalisé selon vos préférences et contraintes.
+          </p>
+          <Link 
+            href="/create-menu"
+            className="inline-block bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition-colors"
+          >
+            Commencer
+          </Link>
         </div>
-      )}
+
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+            Gérer les Plats
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Ajoutez, modifiez ou supprimez des plats de votre base de données.
+          </p>
+          <Link 
+            href="/manage-dishes"
+            className="inline-block bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition-colors"
+          >
+            Gérer
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }
