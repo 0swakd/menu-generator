@@ -1,10 +1,12 @@
 'use client'
 import { useState } from 'react'
 import MenuForm from '../../components/MenuForm'
+import MenuDisplay from '../../components/MenuDisplay'
 import { FormData, MenuResponse } from '../../types'
 
 export default function CreateMenuPage() {
   const [menu, setMenu] = useState<MenuResponse | null>(null)
+  const [lastFormData, setLastFormData] = useState<FormData | null>(null)
 
   const handleSubmit = async (formData: FormData) => {
     const response = await fetch('/api/generate-menu', {
@@ -15,18 +17,14 @@ export default function CreateMenuPage() {
     
     const result: MenuResponse = await response.json()
     setMenu(result)
+    setLastFormData(formData)
   }
 
   return (
     <div className="container mx-auto py-8">
       <MenuForm onSubmit={handleSubmit} />
       {menu && (
-        <div className="mt-8 max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Votre Menu</h2>
-          <pre className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-4 rounded-md overflow-auto">
-            {JSON.stringify(menu, null, 2)}
-          </pre>
-        </div>
+        <MenuDisplay menu={menu} formData={lastFormData} />
       )}
     </div>
   )

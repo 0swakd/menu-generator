@@ -36,3 +36,37 @@ form {
 option {
   background-color: var(--background-hl);
 }
+
+/* Print Styles */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .container {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Hide navigation and other UI elements when printing */
+  nav, .no-print {
+    display: none !important;
+  }
+  
+  /* Ensure good page breaks */
+  .page-break {
+    page-break-before: always;
+  }
+  
+  /* Avoid breaking elements across pages */
+  .avoid-break {
+    page-break-inside: avoid;
+  }
+}
