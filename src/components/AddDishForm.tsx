@@ -24,9 +24,11 @@ interface DishFormData {
 
 export default function AddDishForm({ onDishAdded, onCancel }: AddDishFormProps) {
   const [loading, setLoading] = useState(false)
+  const [autoFillLoading, setAutoFillLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<DishFormData>()
+  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<DishFormData>()
+  const dishName = watch('name')
 
   const onSubmit = async (data: DishFormData) => {
     setLoading(true)
@@ -51,6 +53,49 @@ export default function AddDishForm({ onDishAdded, onCancel }: AddDishFormProps)
     }
   }
 
+  const handleAutoFill = async () => {
+    if (!dishName?.trim()) {
+      setError('Veuillez d\'abord saisir le nom du plat')
+      return
+    }
+
+    setAutoFillLoading(true)
+    setError(null)
+    
+    try {
+      const response = await fetch('/api/auto-fill-dish', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ dishName: dishName.trim() }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'auto-remplissage')
+      }
+
+      const dishInfo = await response.json()
+      
+      // Fill the form with the received data
+      setValue('category', dishInfo.category)
+      setValue('cuisine_type', dishInfo.cuisine_type)
+      setValue('difficulty', dishInfo.difficulty)
+      setValue('prep_time', dishInfo.prep_time)
+      setValue('is_vegetarian', dishInfo.is_vegetarian)
+      setValue('is_vegan', dishInfo.is_vegan)
+      setValue('price_range', dishInfo.price_range)
+      setValue('season', dishInfo.season)
+      setValue('description', dishInfo.description)
+      
+    } catch (err) {
+      setError('Erreur lors de l\'auto-remplissage du formulaire')
+      console.error('Error auto-filling dish:', err)
+    } finally {
+      setAutoFillLoading(false)
+    }
+  }
+
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-gray-100">
@@ -69,12 +114,22 @@ export default function AddDishForm({ onDishAdded, onCancel }: AddDishFormProps)
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Nom du plat *
             </label>
-            <input
-              {...register('name', { required: 'Le nom est obligatoire' })}
-              type="text"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100"
-              placeholder="Ex: Risotto aux champignons"
-            />
+            <div className="flex gap-2">
+              <input
+                {...register('name', { required: 'Le nom est obligatoire' })}
+                type="text"
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100"
+                placeholder="Ex: Risotto aux champignons"
+              />
+              <button
+                type="button"
+                onClick={handleAutoFill}
+                disabled={autoFillLoading || !dishName?.trim()}
+                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+              >
+                {autoFillLoading ? 'Auto-remplissage...' : 'Auto-remplir'}
+              </button>
+            </div>
             {errors.name && (
               <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
             )}
