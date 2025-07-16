@@ -34,6 +34,7 @@ Plats disponibles en base de données : ${JSON.stringify(dishes)}
 IMPORTANT - Règle pour les nouveaux plats :
 - Tu dois créer exactement ${newDishes} nouveaux plats qui ne sont PAS dans la base de données
 - Ces nouveaux plats doivent respecter les contraintes (budget, saison, végétarien/végan)
+- Tu peux adapter des plats existants en base suivant les contraintes pour certains plats (le but n'est pas de tout revisiter non plus, donc piano)
 - Pour les autres plats, utilise prioritairement ceux de la base de données
 - Les nouveaux plats peuvent être inspirés des plats existants mais doivent être différents
 - Equilibre les nouveaux plats et les plats existants
