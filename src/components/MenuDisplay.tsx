@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { MenuResponse } from '../types'
+import { saveGeneratedMenu } from '../lib/utils'
 
 interface MenuDisplayProps {
   menu: MenuResponse
@@ -12,11 +13,18 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
   const [dishStatus, setDishStatus] = useState<{[key: string]: boolean}>({})
   const [addingDish, setAddingDish] = useState<string | null>(null)
   const [addSuccessMessage, setAddSuccessMessage] = useState<string | null>(null)
+  const [regeneratingDish, setRegeneratingDish] = useState<string | null>(null)
+  const [regeneratedMenu, setRegeneratedMenu] = useState<MenuResponse>(menu)
+
+  // Update regenerated menu when menu prop changes
+  useEffect(() => {
+    setRegeneratedMenu(menu)
+  }, [menu])
 
   // Check which dishes exist in the database
   useEffect(() => {
     const checkDishes = async () => {
-      const allDishes = menu.menu.flatMap(meal => meal.dishes)
+      const allDishes = regeneratedMenu.menu.flatMap(meal => meal.dishes)
       const uniqueDishes = [...new Set(allDishes)]
       
       try {
@@ -41,7 +49,7 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
     }
     
     checkDishes()
-  }, [menu])
+  }, [regeneratedMenu])
 
   const handlePrint = () => {
     setIsPrintMode(true)
@@ -73,6 +81,50 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
       console.error('Error adding dish:', error)
     } finally {
       setAddingDish(null)
+    }
+  }
+
+  const handleRegenerateDish = async (dishName: string, mealIndex: number, dishIndex: number) => {
+    setRegeneratingDish(dishName)
+    
+    try {
+      const response = await fetch('/api/regenerate-dish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          dishName, 
+          mealIndex, 
+          dishIndex, 
+          currentMenu: regeneratedMenu,
+          formData 
+        })
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        
+        // Update the regenerated menu with the new dish
+        setRegeneratedMenu(prev => {
+          const newMenu = { ...prev }
+          newMenu.menu[mealIndex].dishes[dishIndex] = result.newDish
+          
+          // Save the updated menu to localStorage
+          if (formData) {
+            saveGeneratedMenu(newMenu, formData)
+          }
+          
+          return newMenu
+        })
+        
+        setAddSuccessMessage(`"${dishName}" a été régénéré en "${result.newDish}"!`)
+        setTimeout(() => setAddSuccessMessage(null), 3000)
+      } else {
+        console.error('Failed to regenerate dish')
+      }
+    } catch (error) {
+      console.error('Error regenerating dish:', error)
+    } finally {
+      setRegeneratingDish(null)
     }
   }
 
@@ -142,7 +194,7 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
 
         {/* Menu Content */}
         <div className="space-y-8">
-          {menu.menu.map((meal, index) => (
+          {regeneratedMenu.menu.map((meal, index) => (
             <div key={index} className="border-l-4 border-blue-500 pl-6 avoid-break">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 {meal.meal}
@@ -165,15 +217,24 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
                           </span>
                         )}
                       </div>
-                      {dishStatus[dish] === false && (
+                      <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleAddDish(dish)}
-                          disabled={addingDish === dish}
-                          className="ml-3 px-3 py-1 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors no-print"
+                          onClick={() => handleRegenerateDish(dish, index, dishIndex)}
+                          disabled={regeneratingDish === dish}
+                          className="px-3 py-1 text-xs bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors no-print"
                         >
-                          {addingDish === dish ? 'Ajout...' : 'Ajouter à la base'}
+                          {regeneratingDish === dish ? 'Régénération...' : 'Régénérer'}
                         </button>
-                      )}
+                        {dishStatus[dish] === false && (
+                          <button
+                            onClick={() => handleAddDish(dish)}
+                            disabled={addingDish === dish}
+                            className="px-3 py-1 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors no-print"
+                          >
+                            {addingDish === dish ? 'Ajout...' : 'Ajouter à la base'}
+                          </button>
+                        )}
+                      </div>
                     </li>
                   ))}
                 </ul>
