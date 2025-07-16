@@ -90,6 +90,10 @@ export default function MenuForm({ onSubmit }: MenuFormProps) {
             <input type="checkbox" {...register('vegan')} className="mr-2" />
             Végan
           </label>
+          <label className="flex items-center">
+            <input type="checkbox" {...register('impact')} className="mr-2" />
+            Considérations sur l'impact écologique
+          </label>
         </div>
       </div>
 

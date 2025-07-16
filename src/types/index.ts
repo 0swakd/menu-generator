@@ -6,6 +6,8 @@ export interface FormData {
     vegan: boolean
     meals: number
     newDishes: number
+    impact: boolean
+    advice: Text
   }
   
   export interface Dish {

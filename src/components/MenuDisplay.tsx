@@ -196,6 +196,18 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
                 </div>
               </div>
 
+              {/* Impact */}
+              {formData.impact == true && (
+              <div className="mb-4">
+                <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
+                  💚 Considération écologique
+                </h4>
+                <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
+                  {meal.advice}
+                </p>
+              </div>
+              )}
+
               {/* Instructions */}
               <div className="mb-4">
                 <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
@@ -205,6 +217,7 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
                   {meal.instructions}
                 </p>
               </div>
+
             </div>
           ))}
         </div>
