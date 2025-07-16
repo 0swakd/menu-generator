@@ -258,7 +258,7 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
               </div>
 
               {/* Impact */}
-              {formData.impact == true && (
+              {formData?.impact === true && (
               <div className="mb-4">
                 <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
                   💚 Considération écologique

@@ -7,7 +7,7 @@ export interface FormData {
     meals: number
     newDishes: number
     impact: boolean
-    advice: Text
+    advice: string
   }
   
   export interface Dish {
@@ -30,6 +30,7 @@ export interface FormData {
     dishes: string[]
     ingredients: string[]
     instructions: string
+    advice: string
   }
   
   export interface MenuResponse {
