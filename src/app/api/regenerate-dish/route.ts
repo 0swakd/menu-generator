@@ -20,6 +20,9 @@ export async function POST(request: NextRequest) {
     // Get all current dishes from the menu to avoid duplicates
     const currentDishes = currentMenu.menu.flatMap((meal: any) => meal.dishes)
 
+    // Generate a random seed for variety
+    const randomSeed = Math.floor(Math.random() * 1000000)
+    
     const prompt = `
 Tu es un générateur de plats. Tu dois OBLIGATOIREMENT répondre uniquement avec un JSON valide, sans aucun texte avant ou après.
 
@@ -41,6 +44,7 @@ IMPORTANT :
 - Il doit respecter les contraintes (budget, saison, végétarien/végan)
 - Il doit être dans le même style/catégorie que le plat original
 - Privilégie les plats de la base de données si possible, sinon crée un nouveau plat
+- Seed de variabilité : ${randomSeed} (utilise ce nombre pour varier tes suggestions)
 
 Réponds uniquement avec ce format JSON :
 {

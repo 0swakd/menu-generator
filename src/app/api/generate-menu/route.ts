@@ -20,6 +20,9 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error
 
+    // Generate a random seed for variety
+    const randomSeed = Math.floor(Math.random() * 1000000)
+
     const prompt = `
 Tu es un générateur de menus. Tu dois OBLIGATOIREMENT répondre uniquement avec un JSON valide, sans aucun texte avant ou après.
 
@@ -41,6 +44,8 @@ IMPORTANT - Règle pour les nouveaux plats :
 
 Tu peux aussi donner des conseils sur l'impact du menu si demandé :
 - Impact écologique et conseils : ${impact ? 'Oui' : 'Non'}
+
+Seed de variabilité : ${randomSeed} (utilise ce nombre pour varier tes suggestions)
 
 Crée un menu équilibré et varié avec des suggestions d'accompagnements et d'ingrédients.
 Format la réponse en JSON avec cette structure :
