@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { MenuResponse } from '../types'
+import { MenuResponse, MenuDish } from '../types'
 import { saveGeneratedMenu } from '../lib/utils'
 
 interface MenuDisplayProps {
@@ -16,6 +16,16 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
   const [regeneratingDish, setRegeneratingDish] = useState<string | null>(null)
   const [regeneratedMenu, setRegeneratedMenu] = useState<MenuResponse>(menu)
 
+  // Helper function to get dish name from both string and MenuDish formats
+  const getDishName = (dish: string | MenuDish): string => {
+    return typeof dish === 'string' ? dish : dish.name
+  }
+
+  // Helper function to check if dish is MenuDish type
+  const isMenuDish = (dish: string | MenuDish): dish is MenuDish => {
+    return typeof dish === 'object' && 'name' in dish
+  }
+
   // Update regenerated menu when menu prop changes
   useEffect(() => {
     setRegeneratedMenu(menu)
@@ -26,7 +36,9 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
     const checkDishes = async () => {
       if (!regeneratedMenu?.menu) return
       
-      const allDishes = regeneratedMenu.menu.flatMap(meal => meal.dishes)
+      const allDishes = regeneratedMenu.menu.flatMap(meal => 
+        meal.dishes.map(dish => getDishName(dish))
+      )
       const uniqueDishes = [...new Set(allDishes)]
       
       try {
@@ -205,40 +217,61 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
               {/* Dishes */}
               <div className="mb-4">
                 <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
-                  🍽️ Plats
+                  🍽️ Plats {meal.day && <span className="text-sm font-normal">(Jour {meal.day})</span>}
                 </h4>
                 <ul className="space-y-2">
-                  {meal.dishes.map((dish, dishIndex) => (
-                    <li key={dishIndex} className="text-gray-700 dark:text-gray-300 flex items-center justify-between">
-                      <div className="flex items-center">
-                        <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                        <span>{dish}</span>
-                        {dishStatus[dish] === true && (
-                          <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                            Dans la base
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleRegenerateDish(dish, index, dishIndex)}
-                          disabled={regeneratingDish === dish}
-                          className="px-3 py-1 text-xs bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors no-print"
-                        >
-                          {regeneratingDish === dish ? 'Régénération...' : 'Régénérer'}
-                        </button>
-                        {dishStatus[dish] === false && (
-                          <button
-                            onClick={() => handleAddDish(dish)}
-                            disabled={addingDish === dish}
-                            className="px-3 py-1 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors no-print"
-                          >
-                            {addingDish === dish ? 'Ajout...' : 'Ajouter à la base'}
-                          </button>
-                        )}
-                      </div>
-                    </li>
-                  ))}
+                  {meal.dishes.map((dish, dishIndex) => {
+                    const dishName = getDishName(dish)
+                    const isMultiDay = isMenuDish(dish)
+                    
+                    return (
+                      <li key={dishIndex} className="text-gray-700 dark:text-gray-300">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{dishName}</span>
+                              {isMultiDay && (
+                                <div className="flex gap-4 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                  <span>🍽️ Portions utilisées: {dish.servings_used}</span>
+                                  <span>📦 Restantes: {dish.remaining_servings}</span>
+                                  <span>📅 Jours restants: {dish.days_remaining}</span>
+                                </div>
+                              )}
+                            </div>
+                            {dishStatus[dishName] === true && (
+                              <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                Dans la base
+                              </span>
+                            )}
+                            {isMultiDay && (
+                              <span className="ml-2 text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+                                Multi-jour
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleRegenerateDish(dishName, index, dishIndex)}
+                              disabled={regeneratingDish === dishName}
+                              className="px-3 py-1 text-xs bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors no-print"
+                            >
+                              {regeneratingDish === dishName ? 'Régénération...' : 'Régénérer'}
+                            </button>
+                            {dishStatus[dishName] === false && (
+                              <button
+                                onClick={() => handleAddDish(dishName)}
+                                disabled={addingDish === dishName}
+                                className="px-3 py-1 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors no-print"
+                              >
+                                {addingDish === dishName ? 'Ajout...' : 'Ajouter à la base'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    )
+                  })}
                 </ul>
               </div>
 

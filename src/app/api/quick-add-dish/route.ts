@@ -27,7 +27,11 @@ Tu es un expert culinaire. Pour le plat "${dishName}", fournis les informations 
   "is_vegan": "true ou false", 
   "price_range": "une de ces valeurs: €, €€, €€€",
   "season": "une de ces valeurs: printemps, été, automne, hiver, toute l'année",
-  "description": "description courte du plat (2-3 phrases)"
+  "description": "description courte du plat (2-3 phrases)",
+  "servings_per_dish": "nombre de portions que ce plat fournit quand préparé une fois (généralement 1-12)",
+  "servings_per_person": "nombre de portions qu'une personne mange typiquement pour un repas (généralement 1-2)",
+  "can_be_multi_day": "true si ce plat peut être mangé sur plusieurs jours (comme une tarte, lasagne, etc.), false sinon",
+  "storage_days": "nombre maximum de jours que ce plat peut être conservé et consommé (1-7)"
 }
 
 Réponds uniquement avec le JSON, pas d'autre texte.

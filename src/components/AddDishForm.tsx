@@ -21,6 +21,10 @@ interface DishFormData {
   price_range: string
   season: string
   description: string
+  servings_per_dish: number
+  servings_per_person: number
+  can_be_multi_day: boolean
+  storage_days: number
 }
 
 export default function AddDishForm({ editingDish, onDishAdded, onCancel }: AddDishFormProps) {
@@ -39,8 +43,17 @@ export default function AddDishForm({ editingDish, onDishAdded, onCancel }: AddD
       is_vegan: editingDish.is_vegan,
       price_range: editingDish.price_range,
       season: editingDish.season,
-      description: editingDish.description
-    } : {}
+      description: editingDish.description,
+      servings_per_dish: editingDish.servings_per_dish || 1,
+      servings_per_person: editingDish.servings_per_person || 1,
+      can_be_multi_day: editingDish.can_be_multi_day || false,
+      storage_days: editingDish.storage_days || 1
+    } : {
+      servings_per_dish: 1,
+      servings_per_person: 1,
+      can_be_multi_day: false,
+      storage_days: 1
+    }
   })
   const dishName = watch('name')
 
@@ -114,6 +127,10 @@ export default function AddDishForm({ editingDish, onDishAdded, onCancel }: AddD
       setValue('price_range', dishInfo.price_range)
       setValue('season', dishInfo.season)
       setValue('description', dishInfo.description)
+      setValue('servings_per_dish', dishInfo.servings_per_dish || 1)
+      setValue('servings_per_person', dishInfo.servings_per_person || 1)
+      setValue('can_be_multi_day', dishInfo.can_be_multi_day || false)
+      setValue('storage_days', dishInfo.storage_days || 1)
       
     } catch (err) {
       setError('Erreur lors de l\'auto-remplissage du formulaire')
@@ -291,6 +308,88 @@ export default function AddDishForm({ editingDish, onDishAdded, onCancel }: AddD
           {errors.description && (
             <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
           )}
+        </div>
+
+        {/* Multi-day fields */}
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+            Gestion multi-jours
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Portions par plat *
+              </label>
+              <input
+                {...register('servings_per_dish', { required: 'Le nombre de portions est obligatoire', valueAsNumber: true, min: 1 })}
+                type="number"
+                min="1"
+                max="20"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100"
+                placeholder="Ex: 8"
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Nombre de portions que ce plat fournit quand préparé une fois
+              </p>
+              {errors.servings_per_dish && (
+                <p className="mt-1 text-sm text-red-600">{errors.servings_per_dish.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Portions par personne *
+              </label>
+              <input
+                {...register('servings_per_person', { required: 'Le nombre de portions par personne est obligatoire', valueAsNumber: true, min: 1 })}
+                type="number"
+                min="1"
+                max="5"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100"
+                placeholder="Ex: 1"
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Nombre de portions qu'une personne mange par repas
+              </p>
+              {errors.servings_per_person && (
+                <p className="mt-1 text-sm text-red-600">{errors.servings_per_person.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Durée de conservation *
+              </label>
+              <input
+                {...register('storage_days', { required: 'La durée de conservation est obligatoire', valueAsNumber: true, min: 1, max: 7 })}
+                type="number"
+                min="1"
+                max="7"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100"
+                placeholder="Ex: 3"
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Nombre de jours que ce plat peut être conservé
+              </p>
+              {errors.storage_days && (
+                <p className="mt-1 text-sm text-red-600">{errors.storage_days.message}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="flex items-center">
+              <input
+                {...register('can_be_multi_day')}
+                type="checkbox"
+                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+              />
+              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                Ce plat peut être consommé sur plusieurs jours (ex: tarte, lasagne)
+              </span>
+            </label>
+          </div>
         </div>
 
         <div className="flex gap-4">

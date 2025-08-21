@@ -20,11 +20,15 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error
 
+    // Separate multi-day dishes from regular dishes
+    const multiDayDishes = dishes?.filter(dish => dish.can_be_multi_day) || []
+    const regularDishes = dishes?.filter(dish => !dish.can_be_multi_day) || []
+
     // Generate a random seed for variety
     const randomSeed = Math.floor(Math.random() * 1000000)
 
     const prompt = `
-Tu es un générateur de menus. Tu dois OBLIGATOIREMENT répondre uniquement avec un JSON valide, sans aucun texte avant ou après.
+Tu es un générateur de menus intelligent. Tu dois OBLIGATOIREMENT répondre uniquement avec un JSON valide, sans aucun texte avant ou après.
 
 Génère un menu pour ${people} personnes sur ${meals} repas avec les contraintes suivantes :
 - Budget : ${budget}
@@ -32,34 +36,54 @@ Génère un menu pour ${people} personnes sur ${meals} repas avec les contrainte
 - Végétarien : ${vegetarian ? 'Oui' : 'Non'}
 - Végan : ${vegan ? 'Oui' : 'Non'}
 
-Plats disponibles en base de données : ${JSON.stringify(dishes)}
+Plats réguliers disponibles : ${JSON.stringify(regularDishes)}
+Plats multi-jours disponibles : ${JSON.stringify(multiDayDishes)}
 
-IMPORTANT - Règle pour les nouveaux plats :
+NOUVEAUTÉ IMPORTANTE - Gestion des plats multi-jours :
+Les plats multi-jours peuvent être consommés sur plusieurs repas. Pour ces plats :
+- servings_per_dish : nombre total de portions du plat
+- servings_per_person : portions qu'une personne mange par repas
+- storage_days : durée maximale de conservation
+- Exemple : Une tarte aux pommes (8 portions) pour 1 personne = 8 repas possibles
+
+IMPORTANT - Règles pour les plats :
 - Tu dois créer exactement ${newDishes} nouveaux plats qui ne sont PAS dans la base de données
-- Ces nouveaux plats doivent respecter les contraintes (budget, saison, végétarien/végan)
-- Tu peux adapter des plats existants en base suivant les contraintes pour certains plats (le but n'est pas de tout revisiter non plus, donc piano)
-- Pour les autres plats, utilise prioritairement ceux de la base de données
-- Les nouveaux plats peuvent être inspirés des plats existants mais doivent être différents
-- Equilibre les nouveaux plats et les plats existants
+- OPTIMISE l'utilisation des plats multi-jours pour réduire les efforts de cuisine
+- Pour un plat multi-jours, calcule combien de repas il peut couvrir : servings_per_dish ÷ (servings_per_person × people)
+- Utilise les plats multi-jours de manière intelligente sur plusieurs repas consécutifs
+- Les nouveaux plats doivent respecter les contraintes (budget, saison, végétarien/végan)
+- Equilibre nouveaux plats, plats réguliers et plats multi-jours
 
 Tu peux aussi donner des conseils sur l'impact du menu si demandé :
 - Impact écologique et conseils : ${impact ? 'Oui' : 'Non'}
 
 Seed de variabilité : ${randomSeed} (utilise ce nombre pour varier tes suggestions)
 
-Crée un menu équilibré et varié avec des suggestions d'accompagnements et d'ingrédients.
+Crée un menu équilibré et varié. Pour les plats multi-jours, indique clairement quand ils sont utilisés sur plusieurs repas.
 Format la réponse en JSON avec cette structure :
 {
   "menu": [
     {
       "meal": "Repas 1",
-      "dishes": ["entrée", "plat", "dessert"],
+      "dishes": [
+        {
+          "name": "nom du plat",
+          "servings_used": 2,
+          "remaining_servings": 6,
+          "days_remaining": 2,
+          "is_multi_day": true
+        }
+      ],
       "ingredients": ["liste des ingrédients principaux"],
       "advice": "conseil sur l'impact écologique",
-      "instructions": "conseils de préparation"
+      "instructions": "conseils de préparation",
+      "day": 1
     }
   ]
 }
+
+Pour les plats normaux, utilise juste le nom comme string : "dishes": ["salade", "steak"]
+Pour les plats multi-jours, utilise l'objet détaillé ci-dessus.
 `
 
     const message = await anthropic.messages.create({
