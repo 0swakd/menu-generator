@@ -24,6 +24,8 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
   // Check which dishes exist in the database
   useEffect(() => {
     const checkDishes = async () => {
+      if (!regeneratedMenu?.menu) return
+      
       const allDishes = regeneratedMenu.menu.flatMap(meal => meal.dishes)
       const uniqueDishes = [...new Set(allDishes)]
       
@@ -194,7 +196,7 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
 
         {/* Menu Content */}
         <div className="space-y-8">
-          {regeneratedMenu.menu.map((meal, index) => (
+          {regeneratedMenu?.menu?.length > 0 ? regeneratedMenu.menu.map((meal, index) => (
             <div key={index} className="border-l-4 border-blue-500 pl-6 avoid-break">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 {meal.meal}
@@ -280,7 +282,11 @@ export default function MenuDisplay({ menu, formData }: MenuDisplayProps) {
               </div>
 
             </div>
-          ))}
+          )) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500 dark:text-gray-400">Aucun menu à afficher</p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
